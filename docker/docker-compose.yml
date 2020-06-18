@@ -1,0 +1,68 @@
+version: '2'
+services:
+  code:
+    image: debian:jessie
+    volumes:
+      - ../:/var/www
+
+  mysqldata:
+    image: debian:jessie
+
+  nginx:
+    build: nginx
+    environment:
+      - SERVER_NAME=localhost
+    volumes_from:
+      - code
+    links:
+      - php:fpm
+    networks:
+      sylius:
+        ipv4_address: 70.10.0.101
+    ports:
+      - "7010:80"
+
+  php:
+    build: php
+    image: sylius/php:7.2.0-fpm-dev
+    environment:
+    - DEVELOPER_HOST=70.10.0.1
+    - DEVELOPER_PORT=9000
+    - SYLIUS_APP_DEV_PERMITTED=1
+    volumes_from:
+    - code
+    links:
+    - mysql
+    - redis
+    networks:
+      sylius:
+        ipv4_address: 70.10.0.102
+
+  mysql:
+    image: mysql:5.7.19
+    environment:
+      - MYSQL_DATABASE=homestead_dev
+      - MYSQL_DATABASE_TEST=homestead_testing
+      - MYSQL_USER=dev
+      - MYSQL_PASSWORD=devpass
+      - MYSQL_ROOT_PASSWORD=rootpass
+    volumes_from:
+      - mysqldata
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      sylius:
+        ipv4_address: 70.10.0.103
+
+  redis:
+    image: redis:3.2.11
+    networks:
+      sylius:
+        ipv4_address: 70.10.0.104
+
+networks:
+  sylius:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 70.10.0.0/24

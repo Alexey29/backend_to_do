@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [ -z ${MYSQL_DATABASE_TEST} ]
+then
+  MYSQL_USER='dev'
+fi
+
+QUERY="CREATE DATABASE IF NOT EXISTS "
+QUERY+="${MYSQL_DATABASE_TEST}"
+QUERY+=";"
+
+PRIVILEGES="GRANT ALL PRIVILEGES ON "
+PRIVILEGES+="${MYSQL_DATABASE_TEST}"
+PRIVILEGES+=".* TO '"
+PRIVILEGES+="${MYSQL_USER}"
+PRIVILEGES+="'@'%'";
+
+MYSQL=`which mysql`
+$MYSQL -uroot -prootpass -e "${QUERY}"
+$MYSQL -uroot -prootpass -e "${PRIVILEGES}"
